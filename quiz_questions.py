@@ -13,4 +13,4 @@ for i in text:
         answers.append(i)
 
 quiz_dictionary = dict(zip(questions, answers))
-print(quiz_dictionary)
+print(*quiz_dictionary)
