@@ -1,16 +1,22 @@
-with open('1vs1200.txt', 'r', encoding="KOI8-R") as file:
-    content = file.read()
-text = content.split('\n\n')
+from random import choice
 
-questions = []
-answers = []
 
-for i in text:
-    i.strip()
-    if i.startswith('Вопрос') or i.startswith('\nВопрос'):
-        questions.append(i)
-    elif i.startswith('Ответ'):
-        answers.append(i)
+def random_question():
+    with open('1vs1200.txt', 'r', encoding="KOI8-R") as file:
+        content = file.read()
+    text = content.split('\n\n')
 
-quiz_dictionary = dict(zip(questions, answers))
-print(*quiz_dictionary)
+    questions = []
+    answers = []
+
+    for i in text:
+        i.strip()
+        if i.startswith('Вопрос') or i.startswith('\nВопрос'):
+            questions.append(i)
+        elif i.startswith('Ответ'):
+            answers.append(i)
+
+    quiz_dictionary = dict(zip(questions, answers))
+    random_question = choice(list(quiz_dictionary.keys()))
+
+    return random_question

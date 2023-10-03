@@ -1,25 +1,30 @@
 import os
-from aiogram import Bot, Dispatcher, types, executor
+import telebot
+from telebot import types
 from dotenv import load_dotenv, find_dotenv
-from aiogram.types import ReplyKeyboardMarkup
+from quiz_questions import random_question
 
 load_dotenv(find_dotenv())
-bot = Bot(token=os.environ.get('TELEGRAM_TOKEN'))
-dp = Dispatcher(bot)
-question_button = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True).row('Новый вопрос', 'Сдаться',
-                                                                                           'Мой счёт')
+bot = telebot.TeleBot(os.environ.get('TELEGRAM_TOKEN'))
 
 
-@dp.message_handler(commands=['start'])
-async def process_hello(message: types.Message):
-    await bot.send_message(message.from_user.id, 'Привет! Я бот для викторин!', reply_markup=question_button)
+@bot.message_handler(commands=['start'])
+def start(message):
+    markup = types.InlineKeyboardMarkup(row_width=3)
+    question = types.InlineKeyboardButton('Новый вопрос', callback_data='new_question')
+    give_up = types.InlineKeyboardButton('Сдаться', callback_data='give_up')
+    my_account = types.InlineKeyboardButton('Мой счёт', callback_data='my_account')
+    markup.add(question, give_up, my_account)
+
+    bot.send_message(message.chat.id, 'Привет! Я бот для викторин!', reply_markup=markup)
 
 
-@dp.message_handler(text='Новый вопрос')
-async def new_question(message: types.Message):
-    await message.answer('Вопрос: О чем профессор Генри Бичер сказал, что этому "можно дать'
-                                                 ' научное и теологическое определение, но невозможно дать юридическое"?')
+@bot.callback_query_handler(func=lambda call:True)
+def new_question(call):
+    if call.message:
+        if call.data == 'new_question':
+            bot.send_message(call.message.chat.id, random_question())
 
 
 if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+    bot.polling()
