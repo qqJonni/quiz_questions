@@ -1,4 +1,4 @@
-from random import choice
+from random import randint
 
 
 def random_question():
@@ -17,6 +17,9 @@ def random_question():
             answers.append(i)
 
     quiz_dictionary = dict(zip(questions, answers))
-    random_question = choice(list(quiz_dictionary.keys()))
+    quiz_list = list(quiz_dictionary.items())
 
-    return random_question
+    key, value = quiz_list[randint(0, len(quiz_list) - 1)]
+    lst = key, value
+    print(lst)
+    return lst
