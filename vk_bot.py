@@ -3,6 +3,7 @@ from dotenv import load_dotenv, find_dotenv
 import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.keyboard import VkKeyboardColor, VkKeyboard
+from quiz_questions import random_question
 
 
 def send_message(user_id, message, keyboard=None):
@@ -12,10 +13,9 @@ def send_message(user_id, message, keyboard=None):
         'random_id': 0
     }
 
-    if keyboard != None:
+    if keyboard is not None:
         post['keyboard'] = keyboard.get_keyboard()
-    else:
-        post = post
+
     session.method('messages.send', post)
 
 
@@ -39,3 +39,22 @@ if __name__ == "__main__":
                 send_message(user_id, "Привет! Я бот для викторин! Чтобы начать, нажмите кнопку 'Новый вопрос'.",
                              keyboard)
 
+            elif text == 'новый вопрос':
+                question, answer = random_question()
+                print(question)
+                print(answer)
+                send_message(user_id, question)
+                user_question = question
+                correct_answer = answer
+
+            elif text == 'сдаться':
+                send_message(user_id, correct_answer)
+
+            elif text == 'мой счет':
+                send_message(user_id, "Твой счет:")
+
+            else:
+                if text == correct_answer.lower():
+                    send_message(user_id, "Ты ответил верно!")
+                else:
+                    send_message(user_id, "Ты ответил неверно.")
