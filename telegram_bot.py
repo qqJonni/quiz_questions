@@ -1,74 +1,48 @@
-from aiogram import Bot, Dispatcher, executor, types
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram import Bot, Dispatcher, types, executor
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from quiz_questions import random_question
 import os
 from dotenv import load_dotenv, find_dotenv
-from random import randint
 
 load_dotenv(find_dotenv())
 bot = Bot(os.environ.get('TELEGRAM_TOKEN'))
-dp = Dispatcher(bot)
-
-keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-keyboard.add(KeyboardButton('Новый вопрос'))
-keyboard.insert(KeyboardButton('Сдаться'))
-keyboard.add(KeyboardButton('Мой счет'))
-
-
-def random_question():
-    with open('1vs1200.txt', 'r', encoding="KOI8-R") as file:
-        content = file.read()
-    text = content.split('\n\n')
-
-    questions = []
-    answers = []
-
-    for i in text:
-        i.strip()
-        if i.startswith('Вопрос') or i.startswith('\nВопрос'):
-            questions.append(i)
-        elif i.startswith('Ответ'):
-            answers.append(i)
-
-    quiz_dictionary = dict(zip(questions, answers))
-    quiz_list = list(quiz_dictionary.items())
-
-    key, value = quiz_list[randint(0, len(quiz_list) - 1)]
-    lst = key, value
-
-    return lst
-
-
-question, answer = random_question()
+storage = MemoryStorage()
+dp = Dispatcher(bot, storage=storage)
 
 
 @dp.message_handler(commands=['start'])
 async def start(message: types.Message):
-    await message.answer(text='Привет! Я бот для викторин!', reply_markup=keyboard)
-    await message.delete()
+    keyboard = types.ReplyKeyboardMarkup(row_width=3, resize_keyboard=True)
+    button_new_question = types.KeyboardButton('Новый вопрос')
+    button_give_up = types.KeyboardButton('Сдаться')
+    button_my_score = types.KeyboardButton('Мой счет')
+    keyboard.add(button_new_question, button_give_up, button_my_score)
+    await message.answer("Привет! Я бот для викторин! Чтобы начать, нажмите кнопку 'Новый вопрос'.",
+                        reply_markup=keyboard)
+
+
+@dp.message_handler(lambda message: message.text == 'Новый вопрос')
+async def send_new_question(message: types.Message):
+    question, answer = random_question()
+    await dp.storage.set_data(chat=message.chat.id, data={"answer": answer})
+    await bot.send_message(chat_id=message.chat.id, text=question)
+
+
+@dp.message_handler(lambda message: message.text == 'Сдаться')
+async def give_up(message: types.Message):
+    data = await dp.storage.get_data(chat=message.chat.id)
+    answer = data.get("answer")
+    await message.reply(f"Правильный ответ: {answer}")
 
 
 @dp.message_handler()
-async def new_question(message: types.Message):
-    if message.text == 'Новый вопрос':
-        global question, answer
-        question, answer = random_question()
-        print(question)
-        print(answer)
-        await message.answer(text=question)
-        await message.delete()
-
-
-@dp.message_handler()
-async def random_answer(message: types.Message):
-    if answer in message.text:
-        await message.reply('Правильно! Поздравляю! Для следующего вопроса нажми "Новый вопрос".')
+async def check_answer(message: types.Message):
+    data = await dp.storage.get_data(chat=message.chat.id)
+    answer = data.get("answer")
+    if answer and message.text.lower() in answer.lower():
+        await message.reply("Поздравляю! Это верный ответ!")
     else:
-        await message.reply('Неправильно… Попробуешь ещё раз?')
-
-
-@dp.message_handler()
-async def handle_message(message: types.Message):
-    await message.answer("Не знаю ответа. Выберите вариант из меню.")
+        await message.reply("Это не верный ответ.")
 
 
 if __name__ == '__main__':
