@@ -1,23 +1,41 @@
-import random
 import os
 from dotenv import load_dotenv, find_dotenv
-import vk_api as vk
+import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
+from vk_api.keyboard import VkKeyboardColor, VkKeyboard
 
 
-def echo(event, vk_api):
-    vk_api.messages.send(
-        user_id=event.user_id,
-        message=event.text,
-        random_id=random.randint(1,1000)
-    )
+def send_message(user_id, message, keyboard=None):
+    post = {
+        'user_id': user_id,
+        'message': message,
+        'random_id': 0
+    }
+
+    if keyboard != None:
+        post['keyboard'] = keyboard.get_keyboard()
+    else:
+        post = post
+    session.method('messages.send', post)
 
 
 if __name__ == "__main__":
     load_dotenv(find_dotenv())
-    vk_session = vk.VkApi(token=os.environ.get('VK_TOKEN'))
-    vk_api = vk_session.get_api()
-    longpoll = VkLongPoll(vk_session)
-    for event in longpoll.listen():
+    session = vk_api.VkApi(token=os.environ.get('VK_TOKEN'))
+
+    for event in VkLongPoll(session).listen():
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-            echo(event, vk_api)
+            text = event.text.lower()
+            user_id = event.user_id
+
+            if text == 'start':
+                keyboard = VkKeyboard()
+                buttons = ['Новый вопрос', 'Сдаться', 'Мой счет']
+                buttons_color = [VkKeyboardColor.POSITIVE, VkKeyboardColor.POSITIVE, VkKeyboardColor.NEGATIVE]
+
+                for button, button_color in zip(buttons, buttons_color):
+                    keyboard.add_button(button, button_color)
+
+                send_message(user_id, "Привет! Я бот для викторин! Чтобы начать, нажмите кнопку 'Новый вопрос'.",
+                             keyboard)
+
