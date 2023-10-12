@@ -1,16 +1,17 @@
 import os
+import random
 from dotenv import load_dotenv, find_dotenv
 import vk_api
 from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.keyboard import VkKeyboardColor, VkKeyboard
-from quiz_questions import random_question
+from quiz_questions import get_random_question
 
 
 def send_message(user_id, message, keyboard=None):
     post = {
         'user_id': user_id,
         'message': message,
-        'random_id': 0
+        'random_id': random.randint(1, 1000)
     }
 
     if keyboard is not None:
@@ -40,9 +41,7 @@ if __name__ == "__main__":
                              keyboard)
 
             elif text == 'новый вопрос':
-                question, answer = random_question()
-                print(question)
-                print(answer)
+                question, answer = get_random_question()
                 send_message(user_id, question)
                 user_question = question
                 correct_answer = answer

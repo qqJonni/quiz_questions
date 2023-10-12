@@ -1,6 +1,6 @@
 from aiogram import Bot, Dispatcher, types, executor
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from quiz_questions import random_question
+from quiz_questions import get_random_question
 import os
 from dotenv import load_dotenv, find_dotenv
 
@@ -23,7 +23,7 @@ def create_dispatcher():
 
     @dp.message_handler(lambda message: message.text == 'Новый вопрос')
     async def send_new_question(message: types.Message):
-        question, answer = random_question()
+        question, answer = get_random_question()
         await dp.storage.set_data(chat=message.chat.id, data={"answer": answer})
         await bot.send_message(chat_id=message.chat.id, text=question)
 

@@ -1,7 +1,7 @@
 from random import randint
 
 
-def random_question():
+def get_random_question():
     with open('1vs1200.txt', 'r', encoding="KOI8-R") as file:
         content = file.read()
     text = content.split('\n\n')
@@ -9,17 +9,17 @@ def random_question():
     questions = []
     answers = []
 
-    for i in text:
-        i.strip()
-        if i.startswith('Вопрос') or i.startswith('\nВопрос'):
-            questions.append(i)
-        elif i.startswith('Ответ'):
-            answers.append(i)
+    for line in text:
+        line.strip()
+        if line.startswith('Вопрос') or line.startswith('\nВопрос'):
+            questions.append(line)
+        elif line.startswith('Ответ'):
+            answers.append(line)
 
-    quiz_dictionary = dict(zip(questions, answers))
-    quiz_list = list(quiz_dictionary.items())
+    quiz_questions = dict(zip(questions, answers))
+    new_quiz_questions = list(quiz_questions.items())
 
-    key, value = quiz_list[randint(0, len(quiz_list) - 1)]
-    lst = key, value
+    question, answer = new_quiz_questions[randint(0, len(new_quiz_questions) - 1)]
+    questions_list = question, answer
 
-    return lst
+    return questions_list
