@@ -1,5 +1,5 @@
 import argparse
-from random import randint
+import random
 
 
 class Quiz:
@@ -20,8 +20,7 @@ class Quiz:
         self.questions = dict(zip(questions, answers))
 
     def get_random_question(self):
-        new_quiz_questions = list(self.questions.items())
-        question, answer = new_quiz_questions[randint(0, len(new_quiz_questions) - 1)]
+        question, answer = random.choice(list(self.questions.items()))
         return question, answer
 
 
