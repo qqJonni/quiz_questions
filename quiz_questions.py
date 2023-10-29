@@ -1,32 +1,30 @@
-import argparse
-import random
+from random import randint
 
 
-class Quiz:
-    def __init__(self, filename='1vs1200.txt'):
-        with open(filename, 'r', encoding="KOI8-R") as file:
-            content = file.read()
-        text = content.split('\n\n')
-        questions = []
-        answers = []
+def random_question():
+    with open('1vs1200.txt', 'r', encoding="KOI8-R") as file:
+        content = file.read()
+    text = content.split('\n\n')
 
-        for line in text:
-            line.strip()
-            if line.startswith('Вопрос') or line.startswith('\nВопрос'):
-                questions.append(line)
-            elif line.startswith('Ответ'):
-                answers.append(line)
+    questions = []
+    answers = []
 
-        self.questions = dict(zip(questions, answers))
+    for i in text:
+        i.strip()
+        if i.startswith('Вопрос') or i.startswith('\nВопрос'):
+            questions.append(i)
+        elif i.startswith('Ответ'):
+            answers.append(i)
 
-    def get_random_question(self):
-        question, answer = random.choice(list(self.questions.items()))
-        return question, answer
+    quiz_dictionary = dict(zip(questions, answers))
+    quiz_list = list(quiz_dictionary.items())
+
+    key, value = quiz_list[randint(0, len(quiz_list) - 1)]
+    lst = key, value
+
+    return lst
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('filename', nargs='?', default='1vs1200.txt', help='Введите название файла')
-    args = parser.parse_args()
-    quiz = Quiz(args.filename)
-    print(quiz.get_random_question())
+    question, answer = random_question()
+
