@@ -5,14 +5,20 @@ import os
 from dotenv import load_dotenv, find_dotenv
 
 
-if __name__ == '__main__':
-    load_dotenv(find_dotenv())
-    bot = Bot(os.environ.get('TELEGRAM_TOKEN'))
-    storage = MemoryStorage()
-    dp = Dispatcher(bot, storage=storage)
+class QuizBot:
+    def __init__(self):
+        load_dotenv(find_dotenv())
+        self.bot = Bot(os.environ.get('TELEGRAM_TOKEN'))
+        self.storage = MemoryStorage()
+        self.dp = Dispatcher(self.bot, storage=self.storage)
+        self.dp.register_message_handler(self.start, commands=['start'])
+        self.dp.register_message_handler(self.send_new_question, lambda message: message.text == 'Новый вопрос')
+        self.dp.register_message_handler(self.give_up, lambda message: message.text == 'Сдаться')
+        self.dp.register_message_handler(self.check_answer)
+        self.executor = executor
 
 
-    async def start(message: types.Message):
+    async def start(self, message: types.Message):
         keyboard = types.ReplyKeyboardMarkup(row_width=3, resize_keyboard=True)
         button_new_question = types.KeyboardButton('Новый вопрос')
         button_give_up = types.KeyboardButton('Сдаться')
@@ -21,31 +27,28 @@ if __name__ == '__main__':
         await message.answer("Привет! Я бот для викторин! Чтобы начать, нажмите кнопку 'Новый вопрос'.",
                             reply_markup=keyboard)
 
-
-    async def send_new_question(message: types.Message):
+    async def send_new_question(self, message: types.Message):
         question, answer = random_question()
-        await dp.storage.set_data(chat=message.chat.id, data={"answer": answer})
-        await bot.send_message(chat_id=message.chat.id, text=question)
+        await self.storage.set_data(chat=message.chat.id, data={"answer": answer})
+        await self.bot.send_message(chat_id=message.chat.id, text=question)
 
-
-    async def give_up(message: types.Message):
-        data = await dp.storage.get_data(chat=message.chat.id)
+    async def give_up(self, message: types.Message):
+        data = await self.storage.get_data(chat=message.chat.id)
         answer = data.get("answer")
         await message.reply(f"Правильный ответ: {answer}")
 
-
-    async def check_answer(message: types.Message):
-        data = await dp.storage.get_data(chat=message.chat.id)
+    async def check_answer(self, message: types.Message):
+        data = await self.storage.get_data(chat=message.chat.id)
         answer = data.get("answer")
         if answer and message.text.lower() in answer.lower():
             await message.reply("Поздравляю! Это верный ответ!")
         else:
             await message.reply("Это не верный ответ.")
 
-    dp.register_message_handler(start, commands=['start'])
-    dp.register_message_handler(send_new_question, lambda message: message.text == 'Новый вопрос')
-    dp.register_message_handler(give_up, lambda message: message.text == 'Сдаться')
-    dp.register_message_handler(check_answer)
+    def run(self):
+        self.executor.start_polling(self.dp, skip_updates=True)
 
-    # Start the bot
-    executor.start_polling(dp, skip_updates=True)
+
+if __name__ == '__main__':
+    quiz_bot = QuizBot()
+    quiz_bot.run()
